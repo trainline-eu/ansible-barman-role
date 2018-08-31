@@ -1,0 +1,34 @@
+#!/bin/bash
+# {{ ansible_managed }}
+export LC_ALL=C
+
+SERVERS="{{ barman_databases|map(attribute='name')|join(' ') }}"
+
+for server in $SERVERS; do
+  printf "Starting backup for %-15s at %-20s... " $server "$(date)"
+  BACKUP_RESULT=$(/usr/bin/barman backup $server 2>&1)
+  if [ $? -eq 0 ]; then
+    echo "done at $(date)"
+  else
+    echo -e "Error during backup of $server at $(date):\n$BACKUP_RESULT"
+  fi
+done
+
+for server in $SERVERS; do
+  RESTORE_DIRECTORY="{{ barman_restore_directory }}"
+  mkdir -p "$RESTORE_DIRECTORY"
+  chown -R barman:barman "$RESTORE_DIRECTORY"
+  printf "Starting restoring backup for %-15s at %-20s..." $server "$(date)"
+  RESTORE_RESULT=$(/usr/bin/barman recover $server latest "$RESTORE_DIRECTORY" 2>&1)
+  if [ $? -eq 0 ]; then
+    echo "done at $(date)"
+  else
+    echo -e "Error during restoring of $server at $(date):\n$RESTORE_RESULT"
+  fi
+  rm -fr "$RESTORE_DIRECTORY"
+done
+
+echo "######################################"
+echo "Summary of all backups"
+echo ""
+/usr/bin/barman list-backup all

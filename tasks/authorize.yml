@@ -1,0 +1,20 @@
+---
+- name: Authorize SSH access to SQL servers
+  authorized_key:
+    user: "postgres"
+    key: "{{ backup_server_pub_key['content']|b64decode }}"
+    state: present
+  delegate_to: "{{ hostvars[item].ansible_host | default(item) }}"
+  with_items: "{{ groups[barman_database.ansible_group] }}"
+  ignore_errors: True
+
+- name: Configure credentials for PSQL access to servers
+  no_log: True
+  lineinfile:
+    path: /var/lib/barman/.pgpass
+    create: yes
+    group: barman
+    owner: barman
+    mode: 0600
+    line: "{{ hostvars[item].ansible_host | default(item) }}:{{ barman_database.primary_port|default(5432) }}:*:barman:{{ barman_database.postgres_barman_password }}"
+  with_items: "{{ groups[barman_database.ansible_group] }}"

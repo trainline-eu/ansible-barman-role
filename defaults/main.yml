@@ -1,0 +1,4 @@
+---
+barman_restore_directory: '/home/restore-$server'
+barman_config: {}
+barman_cron_enabled: True

@@ -1,0 +1,66 @@
+---
+- name: Add Postgres repository key
+  apt_key: id=7FCC7D46ACCC4CF8 url=https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc state=present
+  when: ansible_distribution_release != 'NA'
+
+- name: Add Postgres repository
+  apt_repository: repo="deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+  when: ansible_distribution_release != 'NA'
+
+- name: Install barman
+  apt: name=barman state=present
+
+- name: Copy barman configuration file
+  template: src=barman.conf.j2 dest=/etc/barman.conf
+
+- name: Create /root/scripts needed directory
+  file: path=/root/scripts/ state=directory
+
+- name: Copy barman backup & restore script
+  template: src=barman-backup-restore.sh.j2 dest=/root/scripts/barman-backup-restore.sh mode=0755
+
+- name: Install cron
+  apt: name=cron state=present
+  when: barman_cron_enabled
+
+- name: Setup cron to launch backups everyday
+  cron:
+    name: "Barman backups"
+    job: "/root/scripts/barman-backup-restore.sh"
+    hour: 1
+    minute: 0
+    user: root
+  when: barman_cron_enabled
+
+- name: Copy rsyncd.conf file
+  template: src=rsyncd.conf.j2 dest=/etc/rsyncd.conf mode=0600
+
+- name: Copy rsync.secrets
+  template: src=rsyncd.secrets.j2 dest=/etc/rsyncd.secrets mode=0400
+  no_log: True
+
+- name: Create SSH key for barman user
+  user:
+    name: barman
+    home: /var/lib/barman
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+
+- slurp:
+    src: /var/lib/barman/.ssh/id_rsa.pub
+  register: backup_server_pub_key
+
+- name: Authorize barman to access SQL servers
+  include: authorize.yml
+  with_items: "{{ barman_databases }}"
+  loop_control:
+    loop_var: barman_database
+  when: barman_database.ansible_group is defined
+
+- name: Create WAL streaming replication slots if needed
+  include: streaming.yml
+  with_items: "{{ barman_databases|selectattr('wal_streaming', 'defined')|list|selectattr('wal_streaming')|list }}"
+  loop_control:
+    loop_var: barman_database
+

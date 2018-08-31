@@ -1,0 +1,14 @@
+---
+- name: Check replication slot
+  command: barman check {{ barman_database.name }}
+  become: true
+  become_user: barman
+  ignore_errors: True
+  register: barman_replication_status
+
+- name: Create replication slot
+  command: barman receive-wal --create-slot {{ barman_database.name }}
+  become: true
+  become_user: barman
+  register: barman_replication_slot_creation
+  when: "'barman receive-wal --create-slot' in barman_replication_status.stdout"
