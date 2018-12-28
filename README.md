@@ -45,7 +45,8 @@ barman_databases:                                 # Mandatory
 
 barman_restore_directory: "/home/restore-$server"
 
-# If Rsync backup method is used (default)
+barman_rsync_daemon_enabled: true (default to false)
+# If Rsync daemon is enabled
 barman_rsync_allowed_hosts: 10.0.0.0/24
 barman_rsync_password: "vaulted_secret_password"
 
