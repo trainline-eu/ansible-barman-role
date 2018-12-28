@@ -102,11 +102,16 @@ archiver = on
 ;minimum_redundancy = 1
 
 {% for database in barman_databases %}
+{% if database.extract_host_from_var is defined -%}
+{% set primary_host_name = hostvars[database.primary_host][database.extract_host_from_var] %}
+{%- else %}
+{% set primary_host_name = database.primary_host %}
+{%- endif %}
 [{{ database.name }}]
 description = "{{ database.description }}"
-ssh_command = ssh postgres@{{ database.primary_host }}
+ssh_command = ssh postgres@{{ primary_host_name }}
 backup_method = {{ database.backup_method|default('rsync') }}
-conninfo = host={{ database.primary_host }}
+conninfo = host={{ primary_host_name }}
  {%- if database.primary_port is defined %} port={{ database.primary_port }}{% endif %}
  user=barman dbname=postgres
 {% if database.backup_method|default('rsync') == 'postgres' %}
@@ -116,7 +121,7 @@ conninfo = host={{ database.primary_host }}
 streaming_archiver = on
 slot_name = barman
 {% endif %}
-streaming_conninfo = host={{ database.primary_host }}
+streaming_conninfo = host={{ primary_host_name }}
  {%- if database.primary_port is defined %} port={{ database.primary_port }}{% endif %}
  user=barman dbname=postgres
 {% endif %}

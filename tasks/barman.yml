@@ -56,7 +56,6 @@
   with_items: "{{ barman_databases }}"
   loop_control:
     loop_var: barman_database
-  when: barman_database.ansible_group is defined
 
 - name: Create WAL streaming replication slots if needed
   include: streaming.yml

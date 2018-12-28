@@ -37,11 +37,12 @@ This table lists the tested version of OS/Barman couples.
 barman_databases:                                 # Mandatory
   - name: 'app1'                                     # Mandatory
     description: 'Database of App1'                  # Mandatory
-    primary_host: 10.0.0.1                           # Mandatory
+    primary_host: "{{ groups['db-app1'][0] }}"       # Mandatory
     postgres_barman_password: 'super_secure_vaulted' # Mandatory
     backup_method: rsync                             # Optional (default value)
-    ansible_group: "db-app1"                         # Optional (used to authorize SSH access)
     retention_policy: 'RECOVERY WINDOW OF 7 DAYS'    # Optional (default value)
+    standby_hosts: "{{ groups['db-app1'][1:] }}"     # Optional (Automatically authorize SSH this servers list)
+    extract_host_from_var: 'ec2_private_ip_address'  # Optional (host variable to extract from inventory hostvars)
 
 barman_restore_directory: "/home/restore-$server"
 
