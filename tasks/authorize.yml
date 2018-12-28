@@ -4,7 +4,7 @@
     user: "postgres"
     key: "{{ backup_server_pub_key['content']|b64decode }}"
     state: present
-  delegate_to: "{{ hostvars[item].ansible_host | default(item) }}"
+  delegate_to: "{{ item }}"
   with_items: "{{ groups[barman_database.ansible_group] }}"
   ignore_errors: True
 
