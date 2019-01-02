@@ -34,10 +34,19 @@
 
 - name: Copy rsyncd.conf file
   template: src=rsyncd.conf.j2 dest=/etc/rsyncd.conf mode=0600
+  notify: restart rsync daemon
+  when: barman_rsync_daemon_enabled
 
 - name: Copy rsync.secrets
   template: src=rsyncd.secrets.j2 dest=/etc/rsyncd.secrets mode=0400
   no_log: True
+  when: barman_rsync_daemon_enabled
+
+- name: Start rsync daemon
+  service:
+    name: rsync
+    state: started
+  when: barman_rsync_daemon_enabled
 
 - name: Create SSH key for barman user
   user:
