@@ -1,11 +1,21 @@
 ---
+- set_fact:
+    standby_hosts: "{{ barman_database.standby_hosts|default([]) }}"
+
+- set_fact:
+    all_hosts: "{{ [barman_database.primary_host] + standby_hosts }}"
+
+- set_fact:
+    all_hosts_hostname: "{{ all_hosts | map('extract', hostvars, barman_database.extract_host_from_var) | list }}"
+  when: barman_database.extract_host_from_var is defined
+
 - name: Authorize SSH access to SQL servers
   authorized_key:
     user: "postgres"
     key: "{{ backup_server_pub_key['content']|b64decode }}"
     state: present
-  delegate_to: "{{ hostvars[item].ansible_host | default(item) }}"
-  with_items: "{{ groups[barman_database.ansible_group] }}"
+  delegate_to: "{{ item }}"
+  with_items: "{{ all_hosts }}"
   ignore_errors: True
 
 - name: Configure credentials for PSQL access to servers
@@ -16,5 +26,5 @@
     group: barman
     owner: barman
     mode: 0600
-    line: "{{ hostvars[item].ansible_host | default(item) }}:{{ barman_database.primary_port|default(5432) }}:*:barman:{{ barman_database.postgres_barman_password }}"
-  with_items: "{{ groups[barman_database.ansible_group] }}"
+    line: "{{ item }}:{{ barman_database.primary_port|default(5432) }}:*:barman:{{ barman_database.postgres_barman_password }}"
+  with_items: "{{ all_hosts_hostname|default(all_hosts) }}"
