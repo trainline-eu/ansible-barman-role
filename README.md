@@ -59,6 +59,7 @@ barman_config:                        # Optional
   bandwith_limit: 0
   parallel_jobs: 2
   network_compression: true|false
+  backup_options: exclusive_backup|concurrent_backup
 ```
 
 #### Testing

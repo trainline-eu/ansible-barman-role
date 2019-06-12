@@ -75,7 +75,11 @@ network_compression = {{ barman_config['network_compression'] }}
 
 ; Identify the standard behavior for backup operations: possible values are
 ; exclusive_backup (default), concurrent_backup
+{% if barman_config['backup_options'] is defined -%}
+backup_options = {{ barman_config['backup_options'] }}
+{% else %}
 ;backup_options = exclusive_backup
+{% endif %}
 
 ; Number of retries of data copy during base backup after an error - default 0
 ;basebackup_retry_times = 0
