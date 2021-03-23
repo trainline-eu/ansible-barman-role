@@ -27,8 +27,8 @@
   cron:
     name: "Barman backups"
     job: "/root/scripts/barman-backup-restore.sh"
-    hour: 1
-    minute: 0
+    hour: "1"
+    minute: "0"
     user: root
   when: barman_cron_enabled
 

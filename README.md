@@ -27,6 +27,7 @@ This table lists the tested version of OS/Barman couples.
 | ------------------------- |:---:|
 | Debian 8.x |  :white_check_mark:|
 | Debian 9.x |  :white_check_mark:|
+| Debian 10.x |  :white_check_mark:|
 
 - :white_check_mark: - tested, works fine
 
